@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Religious Connections — Interactive World Map</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#f5f0e8;color:#2a2520;height:100vh;width:100vw;overflow:hidden}
+#map{width:100%;height:100vh}
+
+/* ── SIDEBAR ── */
+#panel{
+  position:fixed;top:0;left:0;width:340px;height:100vh;
+  background:linear-gradient(180deg,#1a1520 0%,#15111c 100%);
+  border-right:1px solid rgba(200,170,120,0.12);
+  z-index:1000;display:flex;flex-direction:column;
+  transition:transform 0.3s ease;
+  box-shadow:4px 0 30px rgba(0,0,0,0.3);
+}
+#panel.hidden{transform:translateX(-340px)}
+
+#panel-toggle{
+  position:fixed;top:14px;left:14px;z-index:1001;
+  background:rgba(26,21,32,0.92);border:1px solid rgba(200,170,120,0.25);
+  color:#c8aa78;width:38px;height:38px;border-radius:8px;
+  cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);transition:all 0.3s;
+}
+#panel-toggle.shifted{left:356px}
+#panel-toggle:hover{background:rgba(200,170,120,0.15)}
+
+/* Header / Branding */
+.panel-brand{
+  padding:28px 24px 20px;
+  border-bottom:1px solid rgba(200,170,120,0.1);
+  flex-shrink:0;
+}
+.brand-logo{
+  font-family:'Crimson Text',serif;font-size:26px;font-weight:700;
+  color:#c8aa78;letter-spacing:0.3px;margin-bottom:2px;
+}
+.brand-tagline{
+  font-size:11px;color:rgba(200,170,120,0.45);font-style:italic;
+  letter-spacing:0.3px;
+}
+
+/* Story List - scrollable */
+.story-section{
+  flex:1;overflow-y:auto;display:flex;flex-direction:column;
+  min-height:0;
+}
+.story-section-head{
+  padding:16px 24px 8px;
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:1.2px;color:rgba(200,170,120,0.35);
+  flex-shrink:0;
+}
+.slist{
+  padding:0 12px 12px;flex:1;overflow-y:auto;
+}
+.slist::-webkit-scrollbar{width:4px}
+.slist::-webkit-scrollbar-track{background:transparent}
+.slist::-webkit-scrollbar-thumb{background:rgba(200,170,120,0.15);border-radius:4px}
+
+.sitem{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;
+  border-radius:8px;cursor:pointer;margin-bottom:2px;
+  transition:all 0.2s ease;border:1px solid transparent;
+}
+.sitem:hover{
+  background:rgba(200,170,120,0.08);
+  border-color:rgba(200,170,120,0.12);
+}
+.sitem.active{
+  background:rgba(200,170,120,0.12);
+  border-color:rgba(200,170,120,0.2);
+}
+.sitem.hovering{
+  background:rgba(200,170,120,0.06);
+  border-color:rgba(200,170,120,0.1);
+}
+.sdot{
+  width:12px;height:12px;border-radius:50%;flex-shrink:0;
+  transition:transform 0.2s,box-shadow 0.2s;
+}
+.sitem:hover .sdot,.sitem.hovering .sdot{
+  transform:scale(1.3);
+}
+.slabel{font-size:12.5px;font-weight:500;color:#b8a898;flex:1;transition:color 0.2s}
+.sitem:hover .slabel,.sitem.hovering .slabel{color:#c8aa78}
+.sitem.active .slabel{color:#dfc99a;font-weight:600}
+.scount{
+  font-size:10px;color:rgba(200,170,120,0.3);
+  background:rgba(200,170,120,0.06);padding:2px 8px;border-radius:10px;
+  flex-shrink:0;
+}
+
+.controls{
+  padding:8px 16px 12px;flex-shrink:0;
+  border-top:1px solid rgba(200,170,120,0.08);
+}
+.btn-all{
+  width:100%;padding:9px;background:rgba(200,170,120,0.06);
+  border:1px solid rgba(200,170,120,0.15);color:#c8aa78;
+  border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;
+  transition:all 0.2s;
+}
+.btn-all:hover{background:rgba(200,170,120,0.12);border-color:rgba(200,170,120,0.25)}
+
+/* Bio / Footer */
+.panel-bio{
+  padding:20px 24px;
+  border-top:1px solid rgba(200,170,120,0.1);
+  flex-shrink:0;
+  background:rgba(0,0,0,0.15);
+}
+.bio-title{
+  font-family:'Crimson Text',serif;font-size:14px;font-weight:600;
+  color:#c8aa78;margin-bottom:6px;
+}
+.bio-text{
+  font-size:11.5px;line-height:1.6;color:rgba(200,170,120,0.5);
+  margin-bottom:12px;
+}
+.bio-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11.5px;color:#c8aa78;text-decoration:none;
+  padding:6px 14px;border-radius:6px;
+  background:rgba(200,170,120,0.08);border:1px solid rgba(200,170,120,0.15);
+  transition:all 0.2s;
+}
+.bio-link:hover{background:rgba(200,170,120,0.15)}
+.bio-schedule{
+  font-size:10px;color:rgba(200,170,120,0.35);margin-top:10px;
+  font-style:italic;
+}
+
+/* ── POPUPS ── */
+.leaflet-popup-content-wrapper{
+  background:rgba(26,21,32,0.96)!important;color:#e8e0d4!important;
+  border-radius:12px!important;border:1px solid rgba(200,170,120,0.2)!important;
+  box-shadow:0 10px 40px rgba(0,0,0,0.4)!important;
+}
+.leaflet-popup-content{margin:16px 18px!important;font-family:'Inter',sans-serif!important;line-height:1.5!important}
+.leaflet-popup-tip{background:rgba(26,21,32,0.96)!important}
+.leaflet-popup-close-button{color:#c8aa78!important;font-size:20px!important}
+.ptitle{font-family:'Crimson Text',serif;font-size:18px;font-weight:700;color:#c8aa78;margin-bottom:4px}
+.ptrad{font-size:10px;color:rgba(200,170,120,0.5);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px}
+.pdesc{font-size:12.5px;color:#a89880;line-height:1.6;margin-bottom:12px}
+.pbadge{
+  display:inline-block;padding:3px 9px;margin:2px 3px 2px 0;
+  border-radius:10px;font-size:10px;background:rgba(200,170,120,0.07);
+  border:1px solid rgba(200,170,120,0.12);color:#a89880;
+}
+.plink{
+  display:inline-block;padding:8px 16px;margin-top:4px;
+  background:rgba(200,170,120,0.12);border:1px solid rgba(200,170,120,0.25);
+  border-radius:8px;color:#c8aa78;text-decoration:none;font-size:12px;font-weight:500;
+  transition:all 0.2s;
+}
+.plink:hover{background:rgba(200,170,120,0.22);color:#dfc99a}
+
+/* ── MAP TWEAKS ── */
+.leaflet-control-zoom a{
+  background:rgba(26,21,32,0.85)!important;color:#c8aa78!important;
+  border-color:rgba(200,170,120,0.15)!important;
+}
+.leaflet-control-zoom a:hover{background:rgba(200,170,120,0.15)!important}
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<button id="panel-toggle" class="shifted" onclick="togglePanel()">☰</button>
+
+<div id="panel">
+  <div class="panel-brand">
+    <div class="brand-logo">Religious Connections</div>
+    <div class="brand-tagline">Tracing sacred parallels across world traditions</div>
+  </div>
+
+  <div class="story-section">
+    <div class="story-section-head">Explore stories</div>
+    <div class="slist" id="slist"></div>
+    <div class="controls">
+      <button class="btn-all" onclick="showAll()">Show All Connections</button>
+    </div>
+  </div>
+
+  <div class="panel-bio">
+    <div class="bio-title">About this publication</div>
+    <div class="bio-text">
+      Religious Connections explores the surprising parallels between sacred texts across world traditions. Each article traces a single biblical narrative — from Creation to the Binding of Isaac — through the Qur'an, Greek mythology, Hindu scripture, Norse sagas, and beyond, revealing the deep grammar of how civilizations understand the divine.
+    </div>
+    <a href="https://akelley0750.substack.com" target="_blank" class="bio-link">
+      Subscribe on Substack <span style="font-size:14px">&#8594;</span>
+    </a>
+    <div class="bio-schedule">New comparative explorations every Monday, Wednesday &amp; Friday</div>
+  </div>
+</div>
+
+<script>
+var map = L.map('map',{center:[33,38],zoom:4,zoomControl:false});
+L.control.zoom({position:'bottomright'}).addTo(map);
+
+// Light warm map tiles
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',{
+  subdomains:'abcd',maxZoom:18,
+  attribution:'OpenStreetMap, CARTO'
+}).addTo(map);
+
+var markerLayer = L.layerGroup().addTo(map);
+var lineLayer = L.layerGroup().addTo(map);
+var highlightLayer = L.layerGroup().addTo(map);
+
+// ── STORY DATA ──
+var stories = [
+  {
+    id:1, title:"Creation of the World", color:"#b8860b",
+    slug:"the-creation-of-the-world-and-the-universal",
+    summary:"From Genesis to the Vedas, creation myths share primordial chaos, divine speech, separation of elements, and humanity as the final act.",
+    markers:[
+      {lat:31.78,lng:35.23,label:"Jerusalem — Genesis creation, divine word",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca — Quranic creation, Allah's command 'Be'",tradition:"Qur'an"},
+      {lat:39.08,lng:22.35,label:"Mt. Olympus — Greek Theogony, Chaos to cosmos",tradition:"Greek"},
+      {lat:27.99,lng:86.93,label:"Himalayas — Hindu Purusha sacrifice, cosmic egg",tradition:"Hindu"},
+      {lat:64.15,lng:-19.0,label:"Iceland — Norse Ginnungagap, Ymir's body becomes the world",tradition:"Norse"},
+      {lat:30.13,lng:31.30,label:"Heliopolis — Egyptian Atum speaks creation from Nun",tradition:"Egyptian"}
+    ]
+  },
+  {
+    id:2, title:"The First Humans", color:"#1a8a7a",
+    slug:"the-first-humans-and-the-birth-of",
+    summary:"Adam from clay, Prometheus molding mankind from earth, Ask and Embla from driftwood — humanity fashioned from humble material, animated by divine breath.",
+    markers:[
+      {lat:31.0,lng:47.0,label:"Southern Mesopotamia — Garden of Eden, Adam formed from dust",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca — Adam and Hawwa descend to earth",tradition:"Qur'an"},
+      {lat:37.97,lng:23.73,label:"Athens — Prometheus shapes humans from clay",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"Varanasi — Manu, first man in Hindu tradition",tradition:"Hindu"},
+      {lat:59.33,lng:18.07,label:"Scandinavia — Odin finds Ask and Embla on the shore",tradition:"Norse"},
+      {lat:24.09,lng:32.90,label:"Elephantine — Khnum forms humans on his potter's wheel",tradition:"Egyptian"}
+    ]
+  },
+  {
+    id:3, title:"The Fall in Eden", color:"#c0392b",
+    slug:"the-fall-in-eden-and-the-loss-of",
+    summary:"A garden of perfection, a prohibition, a transgression, exile. Pandora's jar, Enkidu's taming, Zoroastrian corruption — paradise lost through human choice.",
+    markers:[
+      {lat:31.0,lng:47.0,label:"Eden / Mesopotamia — Forbidden fruit, expulsion",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Quranic tradition — Adam and Hawwa deceived by Iblis",tradition:"Qur'an"},
+      {lat:37.97,lng:23.73,label:"Greece — Pandora opens the jar, releasing suffering",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"India — Golden age (Satya Yuga) lost through moral decline",tradition:"Hindu"},
+      {lat:31.32,lng:45.64,label:"Uruk — Enkidu loses wildness, gains knowledge of death",tradition:"Mesopotamian"},
+      {lat:32.65,lng:51.68,label:"Persia — Ahriman corrupts Ahura Mazda's pristine creation",tradition:"Zoroastrian"}
+    ]
+  },
+  {
+    id:4, title:"Cain and Abel", color:"#6c3483",
+    slug:"cain-and-abel-and-the-archetype-of",
+    summary:"The first murder — brother against brother. From Set and Osiris to Romulus and Remus, fratricidal conflict marks civilization's founding trauma.",
+    markers:[
+      {lat:32.5,lng:46.0,label:"East of Eden — Cain murders Abel over rejected offering",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Quranic tradition — Qabil and Habil",tradition:"Qur'an"},
+      {lat:41.90,lng:12.50,label:"Rome — Romulus kills Remus to found the city",tradition:"Greek/Roman"},
+      {lat:29.97,lng:76.85,label:"Kurukshetra — Pandavas vs. Kauravas, brothers at war",tradition:"Hindu"},
+      {lat:30.05,lng:31.23,label:"Egypt — Set murders Osiris, dismembers his body",tradition:"Egyptian"},
+      {lat:59.33,lng:18.07,label:"Scandinavia — Blind Hodr slays beloved Baldr",tradition:"Norse"}
+    ]
+  },
+  {
+    id:5, title:"Noah and the Flood", color:"#2471a3",
+    slug:"noah-and-the-flood-and-the-waters-of",
+    summary:"A world drowned for wickedness, one family preserved in a vessel, a bird sent to find land — the most universal story in human civilization.",
+    markers:[
+      {lat:39.70,lng:44.30,label:"Mt. Ararat — Noah's ark comes to rest",tradition:"Hebrew Bible"},
+      {lat:37.38,lng:43.35,label:"Mt. Judi — Quranic landing site of Nuh's ark",tradition:"Qur'an"},
+      {lat:38.53,lng:22.62,label:"Mt. Parnassus — Deucalion and Pyrrha survive Zeus's flood",tradition:"Greek"},
+      {lat:30.08,lng:79.02,label:"Himalayas — Manu warned by Matsya, the fish avatar",tradition:"Hindu"},
+      {lat:31.77,lng:45.51,label:"Shuruppak — Utnapishtim's flood in the Epic of Gilgamesh",tradition:"Mesopotamian"},
+      {lat:60.0,lng:15.0,label:"Scandinavia — Bergelmir survives the blood-flood of Ymir",tradition:"Norse"}
+    ]
+  },
+  {
+    id:6, title:"Tower of Babel", color:"#d4770b",
+    slug:"the-tower-of-babel-and-the-scattering",
+    summary:"Humanity united in one language builds toward heaven and is scattered. From Babel's ziggurat to the Gigantomachy, ambition invites divine correction.",
+    markers:[
+      {lat:32.54,lng:44.42,label:"Babylon — Tower of Babel, languages confused",tradition:"Hebrew Bible"},
+      {lat:30.05,lng:31.23,label:"Egypt — Pharaoh orders Haman to build a tower to the heavens",tradition:"Qur'an"},
+      {lat:39.08,lng:22.35,label:"Mt. Olympus — Giants stack mountains to storm the gods",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"India — Shiva destroys the three cities of pride (Tripura)",tradition:"Hindu"},
+      {lat:32.31,lng:44.37,label:"Etemenanki ziggurat — historical basis for Babel",tradition:"Mesopotamian"}
+    ]
+  },
+  {
+    id:7, title:"The Call of Abraham", color:"#8e44ad",
+    slug:"the-call-of-abraham-and-the-summons-to",
+    summary:"A divine summons to leave everything known. Abraham's call echoes in Ibrahim's hijra, Arjuna's crisis, Aeneas's flight from Troy.",
+    markers:[
+      {lat:30.96,lng:46.10,label:"Ur of the Chaldees — Abraham called to leave his homeland",tradition:"Hebrew Bible"},
+      {lat:36.86,lng:39.03,label:"Harran — Ibrahim smashes idols, begins his journey",tradition:"Qur'an"},
+      {lat:39.96,lng:26.24,label:"Troy — Aeneas called by destiny to abandon his burning city",tradition:"Greek"},
+      {lat:29.97,lng:76.85,label:"Kurukshetra — Arjuna summoned to dharmic duty",tradition:"Hindu"},
+      {lat:36.76,lng:66.90,label:"Balkh — Zoroaster receives his prophetic call",tradition:"Zoroastrian"}
+    ]
+  },
+  {
+    id:8, title:"Hagar and Ishmael", color:"#148f77",
+    slug:"hagar-and-ishmael-and-the-sacred-outcast",
+    summary:"Cast into the wilderness, Hagar becomes the sacred outcast who discovers divine providence. Her story echoes Leto, Isis, and Kunti.",
+    markers:[
+      {lat:31.0,lng:34.8,label:"Beer-lahai-roi, Negev — Hagar finds the well of the Living One",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca — Hajar runs between Safa and Marwa, Zamzam springs forth",tradition:"Qur'an"},
+      {lat:37.40,lng:25.27,label:"Delos — Leto, cast out by Hera, gives birth to Apollo",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"Ganges — Kunti sets baby Karna adrift in a basket",tradition:"Hindu"},
+      {lat:30.41,lng:31.05,label:"Nile Delta — Isis flees with infant Horus into the marshes",tradition:"Egyptian"}
+    ]
+  },
+  {
+    id:9, title:"Destruction of Sodom", color:"#c0392b",
+    slug:"the-destruction-of-sodom-and-gomorrah-and",
+    summary:"Cities rotted from within, divine messengers unrecognized, catastrophic judgment, a prohibition against looking back.",
+    markers:[
+      {lat:31.10,lng:35.40,label:"Dead Sea plain — Sodom destroyed by fire and brimstone",tradition:"Hebrew Bible"},
+      {lat:31.05,lng:35.45,label:"Same region — Lut's cities overturned, rained with stones",tradition:"Qur'an"},
+      {lat:38.50,lng:30.50,label:"Phrygia — Baucis and Philemon spared; town destroyed",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"India — Shiva destroys Tripura when corruption is total",tradition:"Hindu"},
+      {lat:30.96,lng:46.10,label:"Ur — Lamentation over the Destruction of Ur",tradition:"Mesopotamian"},
+      {lat:60.0,lng:15.0,label:"Scandinavia — Ragnarok, cosmic destruction and renewal",tradition:"Norse"}
+    ]
+  },
+  {
+    id:10, title:"The Binding of Isaac", color:"#b7950b",
+    slug:"the-binding-of-isaac-and-the-test-of",
+    summary:"A father commanded to sacrifice his child — the ultimate test of faith. Abraham and Isaac, Ibrahim's sacrifice, Agamemnon and Iphigenia.",
+    markers:[
+      {lat:31.78,lng:35.24,label:"Mt. Moriah, Jerusalem — Abraham binds Isaac",tradition:"Hebrew Bible"},
+      {lat:21.41,lng:39.89,label:"Mina, near Mecca — Ibrahim's willingness, son ransomed",tradition:"Qur'an"},
+      {lat:38.37,lng:23.60,label:"Aulis — Agamemnon sacrifices Iphigenia for fair winds",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"India — Nachiketa offered to Death, gains wisdom",tradition:"Hindu"},
+      {lat:59.33,lng:18.07,label:"Scandinavia — Odin hangs himself on Yggdrasil for knowledge",tradition:"Norse"}
+    ]
+  }
+];
+
+// ── TRADITION COLORS ──
+var tradColors = {
+  "Hebrew Bible":"#b8860b","Qur'an":"#1a8a7a","Greek":"#6c3483","Greek/Roman":"#6c3483",
+  "Hindu":"#c0392b","Mesopotamian":"#d4770b","Norse":"#2471a3",
+  "Egyptian":"#8e44ad","Zoroastrian":"#b7950b"
+};
+
+// ── STATE ──
+var allLines = [];
+var activeStoryId = null;
+var hoverStoryId = null;
+
+// ── BUILD SIDEBAR ──
+var slist = document.getElementById('slist');
+stories.forEach(function(s){
+  var div = document.createElement('div');
+  div.className = 'sitem';
+  div.setAttribute('data-id', s.id);
+  div.innerHTML = '<div class="sdot" style="background:'+s.color+';box-shadow:0 0 6px '+s.color+'44"></div>'
+    + '<span class="slabel">'+s.title+'</span>'
+    + '<span class="scount">'+s.markers.length+'</span>';
+  div.addEventListener('click', function(e){ e.stopPropagation(); showStory(s.id); });
+  div.addEventListener('mouseenter', function(){ hoverHighlight(s.id); });
+  div.addEventListener('mouseleave', function(){ hoverClear(); });
+  slist.appendChild(div);
+});
+
+// ── MARKER ICON ──
+function makeIcon(color, size, glow){
+  size = size || 10;
+  var shadow = glow ? 'box-shadow:0 0 12px '+color+'aa,0 0 24px '+color+'55;' : 'box-shadow:0 0 6px '+color+'66;';
+  return L.divIcon({
+    html:'<div style="width:'+size+'px;height:'+size+'px;border-radius:50%;background:'+color+';border:2.5px solid rgba(255,255,255,0.7);'+shadow+'transition:all 0.3s;"></div>',
+    className:'',
+    iconSize:[size,size],
+    iconAnchor:[size/2,size/2],
+    popupAnchor:[0,-size/2-4]
+  });
+}
+
+// ── CURVED ARC ──
+function curvedArc(p1, p2, n){
+  n = n || 40;
+  var pts = [];
+  var dx = p2[1]-p1[1], dy = p2[0]-p1[0];
+  var dist = Math.sqrt(dx*dx+dy*dy);
+  var midLat = (p1[0]+p2[0])/2 + dist*0.12;
+  var midLng = (p1[1]+p2[1])/2;
+  for(var i=0;i<=n;i++){
+    var t=i/n;
+    pts.push([
+      (1-t)*(1-t)*p1[0]+2*(1-t)*t*midLat+t*t*p2[0],
+      (1-t)*(1-t)*p1[1]+2*(1-t)*t*midLng+t*t*p2[1]
+    ]);
+  }
+  return pts;
+}
+
+// ── DRAW STORY (shared by click and hover) ──
+function drawStory(story, layer, opts){
+  var weight = opts.weight || 2;
+  var opacity = opts.opacity || 0.5;
+  var markerSize = opts.markerSize || 14;
+  var showLabels = opts.showLabels !== false;
+  var interactive = opts.interactive !== false;
+  var glow = opts.glow || false;
+  var lines = [];
+
+  var url = 'https://akelley0750.substack.com/p/'+story.slug;
+
+  // Markers
+  story.markers.forEach(function(m){
+    var tc = tradColors[m.tradition] || story.color;
+    var marker = L.marker([m.lat,m.lng],{icon:makeIcon(tc,markerSize,glow),interactive:interactive}).addTo(layer);
+
+    if(interactive){
+      var badges = story.markers.filter(function(x){return x!==m;}).map(function(x){
+        return '<span class="pbadge">'+x.tradition+'</span>';
+      }).join('');
+      marker.bindPopup(
+        '<div class="ptitle">'+story.title+'</div>'
+        +'<div class="ptrad">'+m.tradition+'</div>'
+        +'<div class="pdesc">'+m.label+'</div>'
+        +'<div style="margin-bottom:10px">'+badges+'</div>'
+        +'<a href="'+url+'" target="_blank" class="plink">Read the full article &#8594;</a>'
+      ,{maxWidth:300});
+    }
+
+    if(showLabels){
+      L.marker([m.lat,m.lng],{
+        icon:L.divIcon({
+          html:'<div style="font-size:11px;color:'+tc+';text-shadow:0 0 4px #fff,0 0 8px #fff,0 0 2px #fff;white-space:nowrap;font-weight:600;font-family:Crimson Text,serif;">'+m.tradition+'</div>',
+          className:'',iconAnchor:[-10,5]
+        }),interactive:false
+      }).addTo(layer);
+    }
+  });
+
+  // Arcs
+  for(var a=0;a<story.markers.length;a++){
+    for(var b=a+1;b<story.markers.length;b++){
+      var p1 = [story.markers[a].lat, story.markers[a].lng];
+      var p2 = [story.markers[b].lat, story.markers[b].lng];
+      var arc = curvedArc(p1, p2);
+      var line = L.polyline(arc,{
+        color:story.color, weight:weight, opacity:opacity,
+        dashArray: glow ? null : '6 4',
+        interactive:interactive,
+        className:'conn-line'
+      }).addTo(layer);
+
+      if(interactive){
+        // Hover effect on connection lines
+        line.on('mouseover',function(e){
+          e.target.setStyle({weight:5,opacity:0.9,dashArray:null});
+          e.target.bringToFront();
+        });
+        line.on('mouseout',function(e){
+          e.target.setStyle({weight:weight,opacity:opacity,dashArray:'6 4'});
+        });
+        // Tooltip on line
+        var tradA = story.markers[a].tradition;
+        var tradB = story.markers[b].tradition;
+        line.bindTooltip('<strong>'+story.title+'</strong><br>'+tradA+' ↔ '+tradB,{
+          sticky:true,direction:'top',offset:[0,-10],
+          className:'conn-tooltip'
+        });
+      }
+      lines.push({line:line,storyId:story.id});
+    }
+  }
+  return lines;
+}
+
+// ── SHOW SINGLE STORY (click) ──
+function showStory(id){
+  markerLayer.clearLayers();
+  lineLayer.clearLayers();
+  highlightLayer.clearLayers();
+  allLines = [];
+  activeStoryId = id;
+  hoverStoryId = null;
+
+  var story = stories.find(function(s){return s.id===id;});
+  if(!story) return;
+
+  // Sidebar active state
+  document.querySelectorAll('.sitem').forEach(function(el){
+    el.classList.toggle('active', parseInt(el.getAttribute('data-id'))===id);
+    el.classList.remove('hovering');
+  });
+
+  allLines = drawStory(story, lineLayer, {weight:3,opacity:0.6,markerSize:16,glow:true});
+
+  var bounds = story.markers.map(function(m){return [m.lat,m.lng];});
+  if(bounds.length>1) map.fitBounds(bounds,{padding:[80,80],maxZoom:6});
+}
+
+// ── SHOW ALL ──
+function showAll(){
+  markerLayer.clearLayers();
+  lineLayer.clearLayers();
+  highlightLayer.clearLayers();
+  allLines = [];
+  activeStoryId = null;
+  hoverStoryId = null;
+
+  document.querySelectorAll('.sitem').forEach(function(el){
+    el.classList.remove('active');
+    el.classList.remove('hovering');
+  });
+
+  stories.forEach(function(story){
+    var lines = drawStory(story, lineLayer, {weight:1.5,opacity:0.25,markerSize:10,showLabels:false,interactive:true});
+    allLines = allLines.concat(lines);
+  });
+
+  map.setView([33,38],4);
+}
+
+// ── HOVER HIGHLIGHT from sidebar ──
+function hoverHighlight(id){
+  if(activeStoryId) return; // don't hover-highlight if a story is clicked/active
+  hoverStoryId = id;
+
+  // Dim all lines
+  allLines.forEach(function(item){
+    if(item.storyId === id){
+      item.line.setStyle({weight:4,opacity:0.8,dashArray:null});
+      item.line.bringToFront();
+    } else {
+      item.line.setStyle({weight:1,opacity:0.08,dashArray:'6 4'});
+    }
+  });
+
+  // Highlight sidebar item
+  document.querySelectorAll('.sitem').forEach(function(el){
+    el.classList.toggle('hovering', parseInt(el.getAttribute('data-id'))===id);
+  });
+
+  // Add glow markers for hovered story
+  highlightLayer.clearLayers();
+  var story = stories.find(function(s){return s.id===id;});
+  if(story){
+    story.markers.forEach(function(m){
+      var tc = tradColors[m.tradition] || story.color;
+      L.marker([m.lat,m.lng],{
+        icon:L.divIcon({
+          html:'<div style="width:22px;height:22px;border-radius:50%;background:'+story.color+'33;border:2px solid '+story.color+'88;box-shadow:0 0 16px '+story.color+'66;"></div>',
+          className:'',iconSize:[22,22],iconAnchor:[11,11]
+        }),interactive:false
+      }).addTo(highlightLayer);
+      // Label
+      L.marker([m.lat,m.lng],{
+        icon:L.divIcon({
+          html:'<div style="font-size:11px;color:'+tc+';text-shadow:0 0 4px #fff,0 0 8px #fff;white-space:nowrap;font-weight:600;font-family:Crimson Text,serif;">'+m.tradition+'</div>',
+          className:'',iconAnchor:[-14,5]
+        }),interactive:false
+      }).addTo(highlightLayer);
+    });
+  }
+}
+
+function hoverClear(){
+  if(activeStoryId) return;
+  hoverStoryId = null;
+  highlightLayer.clearLayers();
+
+  // Restore all lines
+  allLines.forEach(function(item){
+    item.line.setStyle({weight:1.5,opacity:0.25,dashArray:'6 4'});
+  });
+
+  document.querySelectorAll('.sitem').forEach(function(el){
+    el.classList.remove('hovering');
+  });
+}
+
+// ── PANEL TOGGLE ──
+function togglePanel(){
+  var p = document.getElementById('panel');
+  var t = document.getElementById('panel-toggle');
+  p.classList.toggle('hidden');
+  t.classList.toggle('shifted');
+  t.textContent = p.classList.contains('hidden') ? '☰' : '✕';
+  setTimeout(function(){map.invalidateSize()},350);
+}
+
+// ── TOOLTIP STYLE ──
+var ts = document.createElement('style');
+ts.textContent = '.conn-tooltip{background:rgba(26,21,32,0.94)!important;color:#c8aa78!important;border:1px solid rgba(200,170,120,0.2)!important;border-radius:8px!important;font-family:Inter,sans-serif!important;font-size:12px!important;padding:8px 12px!important;box-shadow:0 4px 20px rgba(0,0,0,0.3)!important;line-height:1.5!important}.conn-tooltip strong{color:#dfc99a}';
+document.head.appendChild(ts);
+
+// ── INIT ──
+showAll();
+</script>
+</body>
+</html>
