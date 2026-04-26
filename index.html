@@ -3,19 +3,174 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Religious Connections â Interactive World Map</title>
+<title>Religious Connections — Interactive World Map</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:#f5f0e8;color:#2a2520;height:100vh;width:100vw;overflow:hidden}
-#map{width:100%;height:100vh}ont-size:12px;font-weight:500;
+#map{width:100%;height:100vh}
+
+/* ── SIDEBAR ── */
+#panel{
+  position:fixed;top:0;left:0;width:340px;height:100vh;
+  background:linear-gradient(180deg,#1a1520 0%,#15111c 100%);
+  border-right:1px solid rgba(200,170,120,0.12);
+  z-index:1000;display:flex;flex-direction:column;
+  transition:transform 0.3s ease;
+  box-shadow:4px 0 30px rgba(0,0,0,0.3);
+}
+#panel.hidden{transform:translateX(-340px)}
+
+#panel-toggle{
+  position:fixed;top:14px;left:14px;z-index:1001;
+  background:rgba(26,21,32,0.92);border:1px solid rgba(200,170,120,0.25);
+  color:#c8aa78;width:38px;height:38px;border-radius:8px;
+  cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);transition:all 0.3s;
+}
+#panel-toggle.shifted{left:356px}
+#panel-toggle:hover{background:rgba(200,170,120,0.15)}
+
+/* Header / Branding */
+.panel-brand{
+  padding:28px 24px 20px;
+  border-bottom:1px solid rgba(200,170,120,0.1);
+  flex-shrink:0;
+}
+.brand-logo{
+  font-family:'Crimson Text',serif;font-size:26px;font-weight:700;
+  color:#c8aa78;letter-spacing:0.3px;margin-bottom:2px;
+}
+.brand-tagline{
+  font-size:11px;color:rgba(200,170,120,0.45);font-style:italic;
+  letter-spacing:0.3px;
+}
+
+/* Story List - scrollable */
+.story-section{
+  flex:1;overflow-y:auto;display:flex;flex-direction:column;
+  min-height:0;
+}
+.story-section-head{
+  padding:16px 24px 8px;
+  font-size:10px;font-weight:600;text-transform:uppercase;
+  letter-spacing:1.2px;color:rgba(200,170,120,0.35);
+  flex-shrink:0;
+}
+.slist{
+  padding:0 12px 12px;flex:1;overflow-y:auto;
+}
+.slist::-webkit-scrollbar{width:4px}
+.slist::-webkit-scrollbar-track{background:transparent}
+.slist::-webkit-scrollbar-thumb{background:rgba(200,170,120,0.15);border-radius:4px}
+
+.sitem{
+  display:flex;align-items:center;gap:11px;padding:10px 12px;
+  border-radius:8px;cursor:pointer;margin-bottom:2px;
+  transition:all 0.2s ease;border:1px solid transparent;
+  text-decoration:none;
+}
+.sitem .slink{
+  font-size:11px;color:rgba(200,170,120,0.25);flex-shrink:0;
+  transition:color 0.2s;text-decoration:none;
+}
+.sitem:hover .slink{color:rgba(200,170,120,0.7)}
+.sitem:hover{
+  background:rgba(200,170,120,0.08);
+  border-color:rgba(200,170,120,0.12);
+}
+.sitem.active{
+  background:rgba(200,170,120,0.12);
+  border-color:rgba(200,170,120,0.2);
+}
+.sitem.hovering{
+  background:rgba(200,170,120,0.06);
+  border-color:rgba(200,170,120,0.1);
+}
+.sdot{
+  width:12px;height:12px;border-radius:50%;flex-shrink:0;
+  transition:transform 0.2s,box-shadow 0.2s;
+}
+.sitem:hover .sdot,.sitem.hovering .sdot{
+  transform:scale(1.3);
+}
+.slabel{font-size:12.5px;font-weight:500;color:#b8a898;flex:1;transition:color 0.2s}
+.sitem:hover .slabel,.sitem.hovering .slabel{color:#c8aa78}
+.sitem.active .slabel{color:#dfc99a;font-weight:600}
+.scount{
+  font-size:10px;color:rgba(200,170,120,0.3);
+  background:rgba(200,170,120,0.06);padding:2px 8px;border-radius:10px;
+  flex-shrink:0;
+}
+
+.controls{
+  padding:8px 16px 12px;flex-shrink:0;
+  border-top:1px solid rgba(200,170,120,0.08);
+}
+.btn-all{
+  width:100%;padding:9px;background:rgba(200,170,120,0.06);
+  border:1px solid rgba(200,170,120,0.15);color:#c8aa78;
+  border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;
+  transition:all 0.2s;
+}
+.btn-all:hover{background:rgba(200,170,120,0.12);border-color:rgba(200,170,120,0.25)}
+
+/* Bio / Footer */
+.panel-bio{
+  padding:20px 24px;
+  border-top:1px solid rgba(200,170,120,0.1);
+  flex-shrink:0;
+  background:rgba(0,0,0,0.15);
+}
+.bio-title{
+  font-family:'Crimson Text',serif;font-size:14px;font-weight:600;
+  color:#c8aa78;margin-bottom:6px;
+}
+.bio-text{
+  font-size:11.5px;line-height:1.6;color:rgba(200,170,120,0.5);
+  margin-bottom:12px;
+}
+.bio-link{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11.5px;color:#c8aa78;text-decoration:none;
+  padding:6px 14px;border-radius:6px;
+  background:rgba(200,170,120,0.08);border:1px solid rgba(200,170,120,0.15);
+  transition:all 0.2s;
+}
+.bio-link:hover{background:rgba(200,170,120,0.15)}
+.bio-schedule{
+  font-size:10px;color:rgba(200,170,120,0.35);margin-top:10px;
+  font-style:italic;
+}
+
+/* ── POPUPS ── */
+.leaflet-popup-content-wrapper{
+  background:rgba(26,21,32,0.96)!important;color:#e8e0d4!important;
+  border-radius:12px!important;border:1px solid rgba(200,170,120,0.2)!important;
+  box-shadow:0 10px 40px rgba(0,0,0,0.4)!important;
+}
+.leaflet-popup-content{margin:16px 18px!important;font-family:'Inter',sans-serif!important;line-height:1.5!important}
+.leaflet-popup-tip{background:rgba(26,21,32,0.96)!important}
+.leaflet-popup-close-button{color:#c8aa78!important;font-size:20px!important}
+.ptitle{font-family:'Crimson Text',serif;font-size:18px;font-weight:700;color:#c8aa78;margin-bottom:4px}
+.ptrad{font-size:10px;color:rgba(200,170,120,0.5);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px}
+.pdesc{font-size:12.5px;color:#a89880;line-height:1.6;margin-bottom:12px}
+.pbadge{
+  display:inline-block;padding:3px 9px;margin:2px 3px 2px 0;
+  border-radius:10px;font-size:10px;background:rgba(200,170,120,0.07);
+  border:1px solid rgba(200,170,120,0.12);color:#a89880;
+}
+.plink{
+  display:inline-block;padding:8px 16px;margin-top:4px;
+  background:rgba(200,170,120,0.12);border:1px solid rgba(200,170,120,0.25);
+  border-radius:8px;color:#c8aa78;text-decoration:none;font-size:12px;font-weight:500;
   transition:all 0.2s;
 }
 .plink:hover{background:rgba(200,170,120,0.22);color:#dfc99a}
 
-/* ââ MAP TWEAKS ââ */
+/* ── MAP TWEAKS ── */
 .leaflet-control-zoom a{
   background:rgba(26,21,32,0.85)!important;color:#c8aa78!important;
   border-color:rgba(200,170,120,0.15)!important;
@@ -27,7 +182,7 @@ body{font-family:'Inter',sans-serif;background:#f5f0e8;color:#2a2520;height:100v
 
 <div id="map"></div>
 
-<button id="panel-toggle" class="shifted" onclick="togglePanel()">â°</button>
+<button id="panel-toggle" class="shifted" onclick="togglePanel()">☰</button>
 
 <div id="panel">
   <div class="panel-brand">
@@ -46,7 +201,7 @@ body{font-family:'Inter',sans-serif;background:#f5f0e8;color:#2a2520;height:100v
   <div class="panel-bio">
     <div class="bio-title">About this publication</div>
     <div class="bio-text">
-      Religious Connections explores the surprising parallels between sacred texts across world traditions. Each article traces a single biblical narrative â from Creation to the Binding of Isaac â through the Qur'an, Greek mythology, Hindu scripture, Norse sagas, and beyond, revealing the deep grammar of how civilizations understand the divine.
+      Religious Connections explores the surprising parallels between sacred texts across world traditions. Each article traces a single biblical narrative — from Creation to the Binding of Isaac — through the Qur'an, Greek mythology, Hindu scripture, Norse sagas, and beyond, revealing the deep grammar of how civilizations understand the divine.
     </div>
     <a href="https://akelley0750.substack.com" target="_blank" class="bio-link">
       Subscribe on Substack <span style="font-size:14px">&#8594;</span>
@@ -69,71 +224,71 @@ var markerLayer = L.layerGroup().addTo(map);
 var lineLayer = L.layerGroup().addTo(map);
 var highlightLayer = L.layerGroup().addTo(map);
 
-// ââ STORY DATA ââ
+// ── STORY DATA ──
 var stories = [
   {
     id:1, title:"Creation of the World", color:"#b8860b",
     slug:"the-creation-of-the-world-and-the-universal",
     summary:"From Genesis to the Vedas, creation myths share primordial chaos, divine speech, separation of elements, and humanity as the final act.",
     markers:[
-      {lat:31.78,lng:35.23,label:"Jerusalem â Genesis creation, divine word",tradition:"Hebrew Bible"},
-      {lat:21.42,lng:39.86,label:"Mecca â Quranic creation, Allah's command 'Be'",tradition:"Qur'an"},
-      {lat:39.08,lng:22.35,label:"Mt. Olympus â Greek Theogony, Chaos to cosmos",tradition:"Greek"},
-      {lat:27.99,lng:86.93,label:"Himalayas â Hindu Purusha sacrifice, cosmic egg",tradition:"Hindu"},
-      {lat:64.15,lng:-19.0,label:"Iceland â Norse Ginnungagap, Ymir's body becomes the world",tradition:"Norse"},
-      {lat:30.13,lng:31.30,label:"Heliopolis â Egyptian Atum speaks creation from Nun",tradition:"Egyptian"}
+      {lat:31.78,lng:35.23,label:"Jerusalem — Genesis creation, divine word",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca — Quranic creation, Allah's command 'Be'",tradition:"Qur'an"},
+      {lat:39.08,lng:22.35,label:"Mt. Olympus — Greek Theogony, Chaos to cosmos",tradition:"Greek"},
+      {lat:27.99,lng:86.93,label:"Himalayas — Hindu Purusha sacrifice, cosmic egg",tradition:"Hindu"},
+      {lat:64.15,lng:-19.0,label:"Iceland — Norse Ginnungagap, Ymir's body becomes the world",tradition:"Norse"},
+      {lat:30.13,lng:31.30,label:"Heliopolis — Egyptian Atum speaks creation from Nun",tradition:"Egyptian"}
     ]
   },
   {
     id:2, title:"The First Humans", color:"#1a8a7a",
     slug:"the-first-humans-and-the-birth-of",
-    summary:"Adam from clay, Prometheus molding mankind from earth, Ask and Embla from driftwood â humanity fashioned from humble material, animated by divine breath.",
+    summary:"Adam from clay, Prometheus molding mankind from earth, Ask and Embla from driftwood — humanity fashioned from humble material, animated by divine breath.",
     markers:[
-      {lat:31.0,lng:47.0,label:"Southern Mesopotamia â Garden of Eden, Adam formed from dust",tradition:"Hebrew Bible"},
-      {lat:21.42,lng:39.86,label:"Mecca â Adam and Hawwa descend to earth",tradition:"Qur'an"},
-      {lat:37.97,lng:23.73,label:"Athens â Prometheus shapes humans from clay",tradition:"Greek"},
-      {lat:25.32,lng:83.01,label:"Varanasi â Manu, first man in Hindu tradition",tradition:"Hindu"},
-      {lat:59.33,lng:18.07,label:"Scandinavia â Odin finds Ask and Embla on the shore",tradition:"Norse"},
-      {lat:24.09,lng:32.90,label:"Elephantine â Khnum forms humans on his potter's wheel",tradition:"Egyptian"}
+      {lat:31.0,lng:47.0,label:"Southern Mesopotamia — Garden of Eden, Adam formed from dust",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca — Adam and Hawwa descend to earth",tradition:"Qur'an"},
+      {lat:37.97,lng:23.73,label:"Athens — Prometheus shapes humans from clay",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"Varanasi — Manu, first man in Hindu tradition",tradition:"Hindu"},
+      {lat:59.33,lng:18.07,label:"Scandinavia — Odin finds Ask and Embla on the shore",tradition:"Norse"},
+      {lat:24.09,lng:32.90,label:"Elephantine — Khnum forms humans on his potter's wheel",tradition:"Egyptian"}
     ]
   },
   {
     id:3, title:"The Fall in Eden", color:"#c0392b",
     slug:"the-fall-in-eden-and-the-loss-of",
-    summary:"A garden of perfection, a prohibition, a transgression, exile. Pandora's jar, Enkidu's taming, Zoroastrian corruption â paradise lost through human choice.",
+    summary:"A garden of perfection, a prohibition, a transgression, exile. Pandora's jar, Enkidu's taming, Zoroastrian corruption — paradise lost through human choice.",
     markers:[
-      {lat:31.0,lng:47.0,label:"Eden / Mesopotamia â Forbidden fruit, expulsion",tradition:"Hebrew Bible"},
-      {lat:21.42,lng:39.86,label:"Quranic tradition â Adam and Hawwa deceived by Iblis",tradition:"Qur'an"},
-      {lat:37.97,lng:23.73,label:"Greece â Pandora opens the jar, releasing suffering",tradition:"Greek"},
-      {lat:25.32,lng:83.01,label:"India â Golden age (Satya Yuga) lost through moral decline",tradition:"Hindu"},
-      {lat:31.32,lng:45.64,label:"Uruk â Enkidu loses wildness, gains knowledge of death",tradition:"Mesopotamian"},
-      {lat:32.65,lng:51.68,label:"Persia â Ahriman corrupts Ahura Mazda's pristine creation",tradition:"Zoroastrian"}
+      {lat:31.0,lng:47.0,label:"Eden / Mesopotamia — Forbidden fruit, expulsion",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Quranic tradition — Adam and Hawwa deceived by Iblis",tradition:"Qur'an"},
+      {lat:37.97,lng:23.73,label:"Greece — Pandora opens the jar, releasing suffering",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"India — Golden age (Satya Yuga) lost through moral decline",tradition:"Hindu"},
+      {lat:31.32,lng:45.64,label:"Uruk — Enkidu loses wildness, gains knowledge of death",tradition:"Mesopotamian"},
+      {lat:32.65,lng:51.68,label:"Persia — Ahriman corrupts Ahura Mazda's pristine creation",tradition:"Zoroastrian"}
     ]
   },
   {
     id:4, title:"Cain and Abel", color:"#6c3483",
     slug:"cain-and-abel-and-the-archetype-of",
-    summary:"The first murder â brother against brother. From Set and Osiris to Romulus and Remus, fratricidal conflict marks civilization's founding trauma.",
+    summary:"The first murder — brother against brother. From Set and Osiris to Romulus and Remus, fratricidal conflict marks civilization's founding trauma.",
     markers:[
-      {lat:32.5,lng:46.0,label:"East of Eden â Cain murders Abel over rejected offering",tradition:"Hebrew Bible"},
-      {lat:21.42,lng:39.86,label:"Quranic tradition â Qabil and Habil",tradition:"Qur'an"},
-      {lat:41.90,lng:12.50,label:"Rome â Romulus kills Remus to found the city",tradition:"Greek/Roman"},
-      {lat:29.97,lng:76.85,label:"Kurukshetra â Pandavas vs. Kauravas, brothers at war",tradition:"Hindu"},
-      {lat:30.05,lng:31.23,label:"Egypt â Set murders Osiris, dismembers his body",tradition:"Egyptian"},
-      {lat:59.33,lng:18.07,label:"Scandinavia â Blind Hodr slays beloved Baldr",tradition:"Norse"}
+      {lat:32.5,lng:46.0,label:"East of Eden — Cain murders Abel over rejected offering",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Quranic tradition — Qabil and Habil",tradition:"Qur'an"},
+      {lat:41.90,lng:12.50,label:"Rome — Romulus kills Remus to found the city",tradition:"Greek/Roman"},
+      {lat:29.97,lng:76.85,label:"Kurukshetra — Pandavas vs. Kauravas, brothers at war",tradition:"Hindu"},
+      {lat:30.05,lng:31.23,label:"Egypt — Set murders Osiris, dismembers his body",tradition:"Egyptian"},
+      {lat:59.33,lng:18.07,label:"Scandinavia — Blind Hodr slays beloved Baldr",tradition:"Norse"}
     ]
   },
   {
     id:5, title:"Noah and the Flood", color:"#2471a3",
     slug:"noah-and-the-flood-and-the-waters-of",
-    summary:"A world drowned for wickedness, one family preserved in a vessel, a bird sent to find land â the most universal story in human civilization.",
+    summary:"A world drowned for wickedness, one family preserved in a vessel, a bird sent to find land — the most universal story in human civilization.",
     markers:[
-      {lat:39.70,lng:44.30,label:"Mt. Ararat â Noah's ark comes to rest",tradition:"Hebrew Bible"},
-      {lat:37.38,lng:43.35,label:"Mt. Judi â Quranic landing site of Nuh's ark",tradition:"Qur'an"},
-      {lat:38.53,lng:22.62,label:"Mt. Parnassus â Deucalion and Pyrrha survive Zeus's flood",tradition:"Greek"},
-      {lat:30.08,lng:79.02,label:"Himalayas â Manu warned by Matsya, the fish avatar",tradition:"Hindu"},
-      {lat:31.77,lng:45.51,label:"Shuruppak â Utnapishtim's flood in the Epic of Gilgamesh",tradition:"Mesopotamian"},
-      {lat:60.0,lng:15.0,label:"Scandinavia â Bergelmir survives the blood-flood of Ymir",tradition:"Norse"}
+      {lat:39.70,lng:44.30,label:"Mt. Ararat — Noah's ark comes to rest",tradition:"Hebrew Bible"},
+      {lat:37.38,lng:43.35,label:"Mt. Judi — Quranic landing site of Nuh's ark",tradition:"Qur'an"},
+      {lat:38.53,lng:22.62,label:"Mt. Parnassus — Deucalion and Pyrrha survive Zeus's flood",tradition:"Greek"},
+      {lat:30.08,lng:79.02,label:"Himalayas — Manu warned by Matsya, the fish avatar",tradition:"Hindu"},
+      {lat:31.77,lng:45.51,label:"Shuruppak — Utnapishtim's flood in the Epic of Gilgamesh",tradition:"Mesopotamian"},
+      {lat:60.0,lng:15.0,label:"Scandinavia — Bergelmir survives the blood-flood of Ymir",tradition:"Norse"}
     ]
   },
   {
@@ -141,11 +296,11 @@ var stories = [
     slug:"the-tower-of-babel-and-the-scattering",
     summary:"Humanity united in one language builds toward heaven and is scattered. From Babel's ziggurat to the Gigantomachy, ambition invites divine correction.",
     markers:[
-      {lat:32.54,lng:44.42,label:"Babylon â Tower of Babel, languages confused",tradition:"Hebrew Bible"},
-      {lat:30.05,lng:31.23,label:"Egypt â Pharaoh orders Haman to build a tower to the heavens",tradition:"Qur'an"},
-      {lat:39.08,lng:22.35,label:"Mt. Olympus â Giants stack mountains to storm the gods",tradition:"Greek"},
-      {lat:25.32,lng:83.01,label:"India â Shiva destroys the three cities of pride (Tripura)",tradition:"Hindu"},
-      {lat:32.31,lng:44.37,label:"Etemenanki ziggurat â historical basis for Babel",tradition:"Mesopotamian"}
+      {lat:32.54,lng:44.42,label:"Babylon — Tower of Babel, languages confused",tradition:"Hebrew Bible"},
+      {lat:30.05,lng:31.23,label:"Egypt — Pharaoh orders Haman to build a tower to the heavens",tradition:"Qur'an"},
+      {lat:39.08,lng:22.35,label:"Mt. Olympus — Giants stack mountains to storm the gods",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"India — Shiva destroys the three cities of pride (Tripura)",tradition:"Hindu"},
+      {lat:32.31,lng:44.37,label:"Etemenanki ziggurat — historical basis for Babel",tradition:"Mesopotamian"}
     ]
   },
   {
@@ -153,11 +308,11 @@ var stories = [
     slug:"the-call-of-abraham-and-the-summons-to",
     summary:"A divine summons to leave everything known. Abraham's call echoes in Ibrahim's hijra, Arjuna's crisis, Aeneas's flight from Troy.",
     markers:[
-      {lat:30.96,lng:46.10,label:"Ur of the Chaldees â Abraham called to leave his homeland",tradition:"Hebrew Bible"},
-      {lat:36.86,lng:39.03,label:"Harran â Ibrahim smashes idols, begins his journey",tradition:"Qur'an"},
-      {lat:39.96,lng:26.24,label:"Troy â Aeneas called by destiny to abandon his burning city",tradition:"Greek"},
-      {lat:29.97,lng:76.85,label:"Kurukshetra â Arjuna summoned to dharmic duty",tradition:"Hindu"},
-      {lat:36.76,lng:66.90,label:"Balkh â Zoroaster receives his prophetic call",tradition:"Zoroastrian"}
+      {lat:30.96,lng:46.10,label:"Ur of the Chaldees — Abraham called to leave his homeland",tradition:"Hebrew Bible"},
+      {lat:36.86,lng:39.03,label:"Harran — Ibrahim smashes idols, begins his journey",tradition:"Qur'an"},
+      {lat:39.96,lng:26.24,label:"Troy — Aeneas called by destiny to abandon his burning city",tradition:"Greek"},
+      {lat:29.97,lng:76.85,label:"Kurukshetra — Arjuna summoned to dharmic duty",tradition:"Hindu"},
+      {lat:36.76,lng:66.90,label:"Balkh — Zoroaster receives his prophetic call",tradition:"Zoroastrian"}
     ]
   },
   {
@@ -165,11 +320,11 @@ var stories = [
     slug:"hagar-and-ishmael-and-the-sacred-outcast",
     summary:"Cast into the wilderness, Hagar becomes the sacred outcast who discovers divine providence. Her story echoes Leto, Isis, and Kunti.",
     markers:[
-      {lat:31.0,lng:34.8,label:"Beer-lahai-roi, Negev â Hagar finds the well of the Living One",tradition:"Hebrew Bible"},
-      {lat:21.42,lng:39.86,label:"Mecca â Hajar runs between Safa and Marwa, Zamzam springs forth",tradition:"Qur'an"},
-      {lat:37.40,lng:25.27,label:"Delos â Leto, cast out by Hera, gives birth to Apollo",tradition:"Greek"},
-      {lat:25.32,lng:83.01,label:"Ganges â Kunti sets baby Karna adrift in a basket",tradition:"Hindu"},
-      {lat:30.41,lng:31.05,label:"Nile Delta â Isis flees with infant Horus into the marshes",tradition:"Egyptian"}
+      {lat:31.0,lng:34.8,label:"Beer-lahai-roi, Negev — Hagar finds the well of the Living One",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca — Hajar runs between Safa and Marwa, Zamzam springs forth",tradition:"Qur'an"},
+      {lat:37.40,lng:25.27,label:"Delos — Leto, cast out by Hera, gives birth to Apollo",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"Ganges — Kunti sets baby Karna adrift in a basket",tradition:"Hindu"},
+      {lat:30.41,lng:31.05,label:"Nile Delta — Isis flees with infant Horus into the marshes",tradition:"Egyptian"}
     ]
   },
   {
@@ -177,37 +332,37 @@ var stories = [
     slug:"the-destruction-of-sodom-and-gomorrah-and",
     summary:"Cities rotted from within, divine messengers unrecognized, catastrophic judgment, a prohibition against looking back.",
     markers:[
-      {lat:31.10,lng:35.40,label:"Dead Sea plain â Sodom destroyed by fire and brimstone",tradition:"Hebrew Bible"},
-      {lat:31.05,lng:35.45,label:"Same region â Lut's cities overturned, rained with stones",tradition:"Qur'an"},
-      {lat:38.50,lng:30.50,label:"Phrygia â Baucis and Philemon spared; town destroyed",tradition:"Greek"},
-      {lat:25.32,lng:83.01,label:"India â Shiva destroys Tripura when corruption is total",tradition:"Hindu"},
-      {lat:30.96,lng:46.10,label:"Ur â Lamentation over the Destruction of Ur",tradition:"Mesopotamian"},
-      {lat:60.0,lng:15.0,label:"Scandinavia â Ragnarok, cosmic destruction and renewal",tradition:"Norse"}
+      {lat:31.10,lng:35.40,label:"Dead Sea plain — Sodom destroyed by fire and brimstone",tradition:"Hebrew Bible"},
+      {lat:31.05,lng:35.45,label:"Same region — Lut's cities overturned, rained with stones",tradition:"Qur'an"},
+      {lat:38.50,lng:30.50,label:"Phrygia — Baucis and Philemon spared; town destroyed",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"India — Shiva destroys Tripura when corruption is total",tradition:"Hindu"},
+      {lat:30.96,lng:46.10,label:"Ur — Lamentation over the Destruction of Ur",tradition:"Mesopotamian"},
+      {lat:60.0,lng:15.0,label:"Scandinavia — Ragnarok, cosmic destruction and renewal",tradition:"Norse"}
     ]
   },
   {
     id:10, title:"The Binding of Isaac", color:"#b7950b",
     slug:"the-binding-of-isaac-and-the-test-of",
-    summary:"A father commanded to sacrifice his child â the ultimate test of faith. Abraham and Isaac, Ibrahim's sacrifice, Agamemnon and Iphigenia.",
+    summary:"A father commanded to sacrifice his child — the ultimate test of faith. Abraham and Isaac, Ibrahim's sacrifice, Agamemnon and Iphigenia.",
     markers:[
-      {lat:31.78,lng:35.24,label:"Mt. Moriah, Jerusalem â Abraham binds Isaac",tradition:"Hebrew Bible"},
-      {lat:21.41,lng:39.89,label:"Mina, near Mecca â Ibrahim's willingness, son ransomed",tradition:"Qur'an"},
-      {lat:38.37,lng:23.60,label:"Aulis â Agamemnon sacrifices Iphigenia for fair winds",tradition:"Greek"},
-      {lat:25.32,lng:83.01,label:"India â Nachiketa offered to Death, gains wisdom",tradition:"Hindu"},
-      {lat:59.33,lng:18.07,label:"Scandinavia â Odin hangs himself on Yggdrasil for knowledge",tradition:"Norse"}
+      {lat:31.78,lng:35.24,label:"Mt. Moriah, Jerusalem — Abraham binds Isaac",tradition:"Hebrew Bible"},
+      {lat:21.41,lng:39.89,label:"Mina, near Mecca — Ibrahim's willingness, son ransomed",tradition:"Qur'an"},
+      {lat:38.37,lng:23.60,label:"Aulis — Agamemnon sacrifices Iphigenia for fair winds",tradition:"Greek"},
+      {lat:25.32,lng:83.01,label:"India — Nachiketa offered to Death, gains wisdom",tradition:"Hindu"},
+      {lat:59.33,lng:18.07,label:"Scandinavia — Odin hangs himself on Yggdrasil for knowledge",tradition:"Norse"}
     ]
   },
-  // ââ MESOPOTAMIAN / ANCIENT NEAR EASTERN ââ
+  // ── MESOPOTAMIAN / ANCIENT NEAR EASTERN ──
   {
     id:11, title:"Creation of Enkidu", color:"#cd7f32",
     slug:"creation-of-enkidu",
     summary:"The wild man shaped from clay, drawn from the animals into civilization. Enkidu's creation echoes Adam, Eden, and the price of becoming human.",
     markers:[
-      {lat:31.32,lng:45.64,label:"Uruk â Aruru shapes Enkidu from clay to oppose Gilgamesh",tradition:"Mesopotamian"},
-      {lat:31.0,lng:47.0,label:"Eden â Adam formed from dust, parallels clay-made human motif",tradition:"Hebrew Bible"},
-      {lat:21.42,lng:39.86,label:"Mecca â Quranic Adam created from clay, Iblis refuses to bow",tradition:"Qur'an"},
-      {lat:25.32,lng:83.01,label:"India â Purusha and Manu, primordial humanity shaped by the divine",tradition:"Hindu"},
-      {lat:59.33,lng:18.07,label:"Scandinavia â Ask and Embla fashioned from driftwood by the gods",tradition:"Norse"}
+      {lat:31.32,lng:45.64,label:"Uruk — Aruru shapes Enkidu from clay to oppose Gilgamesh",tradition:"Mesopotamian"},
+      {lat:31.0,lng:47.0,label:"Eden — Adam formed from dust, parallels clay-made human motif",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca — Quranic Adam created from clay, Iblis refuses to bow",tradition:"Qur'an"},
+      {lat:25.32,lng:83.01,label:"India — Purusha and Manu, primordial humanity shaped by the divine",tradition:"Hindu"},
+      {lat:59.33,lng:18.07,label:"Scandinavia — Ask and Embla fashioned from driftwood by the gods",tradition:"Norse"}
     ]
   },
   {
@@ -215,11 +370,11 @@ var stories = [
     slug:"gilgamesh-and-enkidu-meet",
     summary:"The rival becomes the brother. Two men wrestle at the gates of Uruk, and violence transforms into the friendship that defines the epic.",
     markers:[
-      {lat:31.32,lng:45.64,label:"Uruk â Gilgamesh and Enkidu wrestle at the city gate",tradition:"Mesopotamian"},
-      {lat:32.5,lng:46.0,label:"East of Eden â Cain and Abel, brotherhood that ends in murder",tradition:"Hebrew Bible"},
-      {lat:32.25,lng:35.57,label:"Jabbok â Jacob wrestles through the night, gains a new name",tradition:"Hebrew Bible"},
-      {lat:21.42,lng:39.86,label:"Quranic sons of Adam â one brother refuses to retaliate",tradition:"Qur'an"},
-      {lat:29.97,lng:76.85,label:"Kurukshetra â Pandavas vs. Kauravas, kinship war at cosmic scale",tradition:"Hindu"}
+      {lat:31.32,lng:45.64,label:"Uruk — Gilgamesh and Enkidu wrestle at the city gate",tradition:"Mesopotamian"},
+      {lat:32.5,lng:46.0,label:"East of Eden — Cain and Abel, brotherhood that ends in murder",tradition:"Hebrew Bible"},
+      {lat:32.25,lng:35.57,label:"Jabbok — Jacob wrestles through the night, gains a new name",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Quranic sons of Adam — one brother refuses to retaliate",tradition:"Qur'an"},
+      {lat:29.97,lng:76.85,label:"Kurukshetra — Pandavas vs. Kauravas, kinship war at cosmic scale",tradition:"Hindu"}
     ]
   },
   {
@@ -227,11 +382,11 @@ var stories = [
     slug:"expedition-against-humbaba",
     summary:"Gilgamesh invades the sacred Cedar Forest and kills its divine guardian. When does courage become trespass against the gods?",
     markers:[
-      {lat:34.25,lng:35.85,label:"Cedar Forest (Lebanon) â Humbaba guards the sacred trees",tradition:"Mesopotamian"},
-      {lat:31.32,lng:45.64,label:"Uruk â Gilgamesh departs seeking fame that outlasts death",tradition:"Mesopotamian"},
-      {lat:36.37,lng:34.36,label:"Valley of Elah â David faces Goliath, champion vs. giant",tradition:"Hebrew Bible"},
-      {lat:31.0,lng:47.0,label:"Eden â Sacred tree, divine limit, human taking, consequence",tradition:"Hebrew Bible"},
-      {lat:15.0,lng:-90.0,label:"Mesoamerica â Popol Vuh Hero Twins enter the dangerous realm",tradition:"Maya"}
+      {lat:34.25,lng:35.85,label:"Cedar Forest (Lebanon) — Humbaba guards the sacred trees",tradition:"Mesopotamian"},
+      {lat:31.32,lng:45.64,label:"Uruk — Gilgamesh departs seeking fame that outlasts death",tradition:"Mesopotamian"},
+      {lat:36.37,lng:34.36,label:"Valley of Elah — David faces Goliath, champion vs. giant",tradition:"Hebrew Bible"},
+      {lat:31.0,lng:47.0,label:"Eden — Sacred tree, divine limit, human taking, consequence",tradition:"Hebrew Bible"},
+      {lat:15.0,lng:-90.0,label:"Mesoamerica — Popol Vuh Hero Twins enter the dangerous realm",tradition:"Maya"}
     ]
   },
   {
@@ -239,11 +394,11 @@ var stories = [
     slug:"the-bull-of-heaven",
     summary:"Ishtar sends the Bull of Heaven against Uruk. Gilgamesh and Enkidu slay it, but the insult to the divine turns triumph into sacrilege.",
     markers:[
-      {lat:31.32,lng:45.64,label:"Uruk â Bull of Heaven devastates the city, heroes kill it",tradition:"Mesopotamian"},
-      {lat:31.78,lng:35.24,label:"Mt. Moriah â Ram sacrificed so Isaac lives; Bull dies, Enkidu follows",tradition:"Hebrew Bible"},
-      {lat:28.54,lng:33.98,label:"Mt. Sinai â Golden calf, sacred animal imagery mishandled",tradition:"Hebrew Bible"},
-      {lat:31.10,lng:35.40,label:"Dead Sea â Sodom, divine offense spreading to public catastrophe",tradition:"Hebrew Bible"},
-      {lat:25.32,lng:83.01,label:"India â Nandi the sacred bull, vehicle of Shiva",tradition:"Hindu"}
+      {lat:31.32,lng:45.64,label:"Uruk — Bull of Heaven devastates the city, heroes kill it",tradition:"Mesopotamian"},
+      {lat:31.78,lng:35.24,label:"Mt. Moriah — Ram sacrificed so Isaac lives; Bull dies, Enkidu follows",tradition:"Hebrew Bible"},
+      {lat:28.54,lng:33.98,label:"Mt. Sinai — Golden calf, sacred animal imagery mishandled",tradition:"Hebrew Bible"},
+      {lat:31.10,lng:35.40,label:"Dead Sea — Sodom, divine offense spreading to public catastrophe",tradition:"Hebrew Bible"},
+      {lat:25.32,lng:83.01,label:"India — Nandi the sacred bull, vehicle of Shiva",tradition:"Hindu"}
     ]
   },
   {
@@ -251,11 +406,11 @@ var stories = [
     slug:"death-of-enkidu",
     summary:"The gods decree Enkidu's death after the heroes cross divine boundaries. Gilgamesh's grief transforms the epic from adventure into a meditation on mortality.",
     markers:[
-      {lat:31.32,lng:45.64,label:"Uruk â Enkidu dies slowly after divine decree",tradition:"Mesopotamian"},
-      {lat:32.5,lng:46.0,label:"East of Eden â Abel's death teaches the world about blood guilt",tradition:"Hebrew Bible"},
-      {lat:31.0,lng:47.0,label:"Eden â Death follows boundary crossing in Genesis 3",tradition:"Hebrew Bible"},
-      {lat:31.77,lng:35.23,label:"Jerusalem â Job's suffering, bodily protest, unanswered grief",tradition:"Hebrew Bible"},
-      {lat:37.97,lng:23.73,label:"Greece â Achilles and Patroclus, grief that reshapes a hero",tradition:"Greek"}
+      {lat:31.32,lng:45.64,label:"Uruk — Enkidu dies slowly after divine decree",tradition:"Mesopotamian"},
+      {lat:32.5,lng:46.0,label:"East of Eden — Abel's death teaches the world about blood guilt",tradition:"Hebrew Bible"},
+      {lat:31.0,lng:47.0,label:"Eden — Death follows boundary crossing in Genesis 3",tradition:"Hebrew Bible"},
+      {lat:31.77,lng:35.23,label:"Jerusalem — Job's suffering, bodily protest, unanswered grief",tradition:"Hebrew Bible"},
+      {lat:37.97,lng:23.73,label:"Greece — Achilles and Patroclus, grief that reshapes a hero",tradition:"Greek"}
     ]
   },
   {
@@ -263,11 +418,11 @@ var stories = [
     slug:"gilgameshs-search-for-immortality",
     summary:"After Enkidu dies, Gilgamesh crosses scorpion gates, darkness, and the Waters of Death seeking escape from mortality. He returns with wisdom instead of eternal life.",
     markers:[
-      {lat:31.32,lng:45.64,label:"Uruk â Gilgamesh departs the city, grief-driven quest begins",tradition:"Mesopotamian"},
-      {lat:29.5,lng:48.0,label:"Persian Gulf coast â Waters of Death, cosmic geography",tradition:"Mesopotamian"},
-      {lat:31.0,lng:47.0,label:"Eden â Tree of Life, immortality near but barred",tradition:"Hebrew Bible"},
-      {lat:29.97,lng:76.85,label:"Kurukshetra â Bhagavad Gita reframes death through the imperishable self",tradition:"Hindu"},
-      {lat:24.67,lng:84.99,label:"Bodh Gaya â Buddhist traditions treat attachment as the deeper problem",tradition:"Buddhist"}
+      {lat:31.32,lng:45.64,label:"Uruk — Gilgamesh departs the city, grief-driven quest begins",tradition:"Mesopotamian"},
+      {lat:29.5,lng:48.0,label:"Persian Gulf coast — Waters of Death, cosmic geography",tradition:"Mesopotamian"},
+      {lat:31.0,lng:47.0,label:"Eden — Tree of Life, immortality near but barred",tradition:"Hebrew Bible"},
+      {lat:29.97,lng:76.85,label:"Kurukshetra — Bhagavad Gita reframes death through the imperishable self",tradition:"Hindu"},
+      {lat:24.67,lng:84.99,label:"Bodh Gaya — Buddhist traditions treat attachment as the deeper problem",tradition:"Buddhist"}
     ]
   },
   {
@@ -275,11 +430,11 @@ var stories = [
     slug:"utnapishtim-and-the-flood",
     summary:"The flood survivor at the edge of the world tells Gilgamesh how the gods destroyed humanity and he alone was saved. The densest ancient parallel to Noah.",
     markers:[
-      {lat:31.77,lng:45.51,label:"Shuruppak â Utnapishtim warned by Ea through a reed wall",tradition:"Mesopotamian"},
-      {lat:39.70,lng:44.30,label:"Mt. Ararat â Noah's ark, divine warning, animals, covenant",tradition:"Hebrew Bible"},
-      {lat:37.38,lng:43.35,label:"Mt. Judi â Nuh preaches, son refuses, faith defines the saved",tradition:"Qur'an"},
-      {lat:30.08,lng:79.02,label:"Himalayas â Manu warned by Matsya the fish avatar",tradition:"Hindu"},
-      {lat:38.53,lng:22.62,label:"Mt. Parnassus â Deucalion and Pyrrha survive Zeus's flood",tradition:"Greek"}
+      {lat:31.77,lng:45.51,label:"Shuruppak — Utnapishtim warned by Ea through a reed wall",tradition:"Mesopotamian"},
+      {lat:39.70,lng:44.30,label:"Mt. Ararat — Noah's ark, divine warning, animals, covenant",tradition:"Hebrew Bible"},
+      {lat:37.38,lng:43.35,label:"Mt. Judi — Nuh preaches, son refuses, faith defines the saved",tradition:"Qur'an"},
+      {lat:30.08,lng:79.02,label:"Himalayas — Manu warned by Matsya the fish avatar",tradition:"Hindu"},
+      {lat:38.53,lng:22.62,label:"Mt. Parnassus — Deucalion and Pyrrha survive Zeus's flood",tradition:"Greek"}
     ]
   },
   {
@@ -287,11 +442,11 @@ var stories = [
     slug:"atrahasis-and-the-flood",
     summary:"Humans created to carry the gods' labor multiply and become noisy. Plague, drought, famine, and flood follow. Mortality becomes part of the arrangement.",
     markers:[
-      {lat:32.54,lng:44.42,label:"Babylon â Atrahasis Epic, creation-to-flood arc",tradition:"Mesopotamian"},
-      {lat:30.96,lng:46.10,label:"Southern Mesopotamia â Humans created from clay for divine labor",tradition:"Mesopotamian"},
-      {lat:31.0,lng:47.0,label:"Eden region â Genesis shares creation-to-flood arc, moral cause",tradition:"Hebrew Bible"},
-      {lat:21.42,lng:39.86,label:"Mecca â Quranic flood centers prophecy and unbelief",tradition:"Qur'an"},
-      {lat:30.75,lng:46.0,label:"Eridu â Ziusudra preserves the seed of mankind",tradition:"Mesopotamian"}
+      {lat:32.54,lng:44.42,label:"Babylon — Atrahasis Epic, creation-to-flood arc",tradition:"Mesopotamian"},
+      {lat:30.96,lng:46.10,label:"Southern Mesopotamia — Humans created from clay for divine labor",tradition:"Mesopotamian"},
+      {lat:31.0,lng:47.0,label:"Eden region — Genesis shares creation-to-flood arc, moral cause",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca — Quranic flood centers prophecy and unbelief",tradition:"Qur'an"},
+      {lat:30.75,lng:46.0,label:"Eridu — Ziusudra preserves the seed of mankind",tradition:"Mesopotamian"}
     ]
   },
   {
@@ -299,11 +454,11 @@ var stories = [
     slug:"ziusudra-and-the-eridu-genesis",
     summary:"Kingship descends from heaven, cities are established, the gods send a flood. Ziusudra the king-priest carries animals, human seed, and sacred civic order through catastrophe.",
     markers:[
-      {lat:30.75,lng:46.0,label:"Eridu â First city, kingship descends from heaven",tradition:"Mesopotamian"},
-      {lat:31.77,lng:45.51,label:"Shuruppak â Ziusudra hears the divine warning",tradition:"Mesopotamian"},
-      {lat:39.70,lng:44.30,label:"Mt. Ararat â Noah preserves life after divine warning",tradition:"Hebrew Bible"},
-      {lat:32.54,lng:44.42,label:"Babylon â Tower of Babel, heaven-to-earth order",tradition:"Hebrew Bible"},
-      {lat:31.78,lng:35.23,label:"Bethel â Jacob's Ladder, vertical connection of divine and human",tradition:"Hebrew Bible"}
+      {lat:30.75,lng:46.0,label:"Eridu — First city, kingship descends from heaven",tradition:"Mesopotamian"},
+      {lat:31.77,lng:45.51,label:"Shuruppak — Ziusudra hears the divine warning",tradition:"Mesopotamian"},
+      {lat:39.70,lng:44.30,label:"Mt. Ararat — Noah preserves life after divine warning",tradition:"Hebrew Bible"},
+      {lat:32.54,lng:44.42,label:"Babylon — Tower of Babel, heaven-to-earth order",tradition:"Hebrew Bible"},
+      {lat:31.78,lng:35.23,label:"Bethel — Jacob's Ladder, vertical connection of divine and human",tradition:"Hebrew Bible"}
     ]
   },
   {
@@ -311,11 +466,11 @@ var stories = [
     slug:"the-plant-of-life-and-the-serpent",
     summary:"Gilgamesh retrieves a plant that restores youth from the deep. While he bathes, a serpent steals it. The loss is quiet after a journey so vast.",
     markers:[
-      {lat:31.32,lng:45.64,label:"Uruk â Gilgamesh returns empty-handed, the serpent sheds its skin",tradition:"Mesopotamian"},
-      {lat:31.0,lng:47.0,label:"Eden â Tree of Life, serpent, forbidden fruit, barred immortality",tradition:"Hebrew Bible"},
-      {lat:21.42,lng:39.86,label:"Mecca â Satan promises Adam immortality through the forbidden tree",tradition:"Qur'an"},
-      {lat:35.0,lng:105.0,label:"China â Peaches of immortality, the life-plant tradition",tradition:"Chinese"},
-      {lat:37.97,lng:23.73,label:"Greece â Garden of the Hesperides, golden apples of immortality",tradition:"Greek"}
+      {lat:31.32,lng:45.64,label:"Uruk — Gilgamesh returns empty-handed, the serpent sheds its skin",tradition:"Mesopotamian"},
+      {lat:31.0,lng:47.0,label:"Eden — Tree of Life, serpent, forbidden fruit, barred immortality",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca — Satan promises Adam immortality through the forbidden tree",tradition:"Qur'an"},
+      {lat:35.0,lng:105.0,label:"China — Peaches of immortality, the life-plant tradition",tradition:"Chinese"},
+      {lat:37.97,lng:23.73,label:"Greece — Garden of the Hesperides, golden apples of immortality",tradition:"Greek"}
     ]
   },
   {
@@ -323,16 +478,16 @@ var stories = [
     slug:"descent-toward-the-netherworld",
     summary:"Enkidu descends to retrieve lost objects and is seized. Inanna passes seven gates and is stripped bare. The country of the dead has rules the living break.",
     markers:[
-      {lat:31.32,lng:45.64,label:"Uruk â Enkidu descends, fails to obey rules of the lower realm",tradition:"Mesopotamian"},
-      {lat:32.54,lng:44.42,label:"Babylon â Inanna's descent, seven gates, stripped power",tradition:"Mesopotamian"},
-      {lat:32.0,lng:34.85,label:"Joppa â Jonah descends into the fish, Sheol-language, return by mercy",tradition:"Hebrew Bible"},
-      {lat:37.97,lng:23.73,label:"Greece â Orpheus enters the underworld for Eurydice, forbidden to look back",tradition:"Greek"},
-      {lat:34.47,lng:132.45,label:"Japan â Izanagi enters Yomi for Izanami, recoils at death",tradition:"Japanese"}
+      {lat:31.32,lng:45.64,label:"Uruk — Enkidu descends, fails to obey rules of the lower realm",tradition:"Mesopotamian"},
+      {lat:32.54,lng:44.42,label:"Babylon — Inanna's descent, seven gates, stripped power",tradition:"Mesopotamian"},
+      {lat:32.0,lng:34.85,label:"Joppa — Jonah descends into the fish, Sheol-language, return by mercy",tradition:"Hebrew Bible"},
+      {lat:37.97,lng:23.73,label:"Greece — Orpheus enters the underworld for Eurydice, forbidden to look back",tradition:"Greek"},
+      {lat:34.47,lng:132.45,label:"Japan — Izanagi enters Yomi for Izanami, recoils at death",tradition:"Japanese"}
     ]
   }
 ];
 
-// ââ TRADITION COLORS ââ
+// ── TRADITION COLORS ──
 var tradColors = {
   "Hebrew Bible":"#b8860b","Qur'an":"#1a8a7a","Greek":"#6c3483","Greek/Roman":"#6c3483",
   "Hindu":"#c0392b","Mesopotamian":"#cd7f32","Norse":"#2471a3",
@@ -340,12 +495,12 @@ var tradColors = {
   "Chinese":"#c94c4c","Japanese":"#d4770b","Maya":"#2e8b57"
 };
 
-// ââ STATE ââ
+// ── STATE ──
 var allLines = [];
 var activeStoryId = null;
 var hoverStoryId = null;
 
-// ââ BUILD SIDEBAR ââ
+// ── BUILD SIDEBAR ──
 var slist = document.getElementById('slist');
 
 function addSectionLabel(text){
@@ -376,7 +531,7 @@ stories.forEach(function(s, idx){
   slist.appendChild(div);
 });
 
-// ââ MARKER ICON ââ
+// ── MARKER ICON ──
 function makeIcon(color, size, glow){
   size = size || 10;
   var shadow = glow ? 'box-shadow:0 0 12px '+color+'aa,0 0 24px '+color+'55;' : 'box-shadow:0 0 6px '+color+'66;';
@@ -389,7 +544,7 @@ function makeIcon(color, size, glow){
   });
 }
 
-// ââ CURVED ARC ââ
+// ── CURVED ARC ──
 function curvedArc(p1, p2, n){
   n = n || 40;
   var pts = [];
@@ -407,7 +562,7 @@ function curvedArc(p1, p2, n){
   return pts;
 }
 
-// ââ DRAW STORY (shared by click and hover) ââ
+// ── DRAW STORY (shared by click and hover) ──
 function drawStory(story, layer, opts){
   var weight = opts.weight || 2;
   var opacity = opts.opacity || 0.5;
@@ -474,7 +629,7 @@ function drawStory(story, layer, opts){
         // Tooltip on line
         var tradA = story.markers[a].tradition;
         var tradB = story.markers[b].tradition;
-        line.bindTooltip('<strong>'+story.title+'</strong><br>'+tradA+' â '+tradB,{
+        line.bindTooltip('<strong>'+story.title+'</strong><br>'+tradA+' ↔ '+tradB,{
           sticky:true,direction:'top',offset:[0,-10],
           className:'conn-tooltip'
         });
@@ -485,7 +640,7 @@ function drawStory(story, layer, opts){
   return lines;
 }
 
-// ââ SHOW SINGLE STORY (click) ââ
+// ── SHOW SINGLE STORY (click) ──
 function showStory(id){
   markerLayer.clearLayers();
   lineLayer.clearLayers();
@@ -509,7 +664,7 @@ function showStory(id){
   if(bounds.length>1) map.fitBounds(bounds,{padding:[80,80],maxZoom:6});
 }
 
-// ââ SHOW ALL ââ
+// ── SHOW ALL ──
 function showAll(){
   markerLayer.clearLayers();
   lineLayer.clearLayers();
@@ -531,7 +686,7 @@ function showAll(){
   map.setView([33,38],4);
 }
 
-// ââ HOVER HIGHLIGHT from sidebar ââ
+// ── HOVER HIGHLIGHT from sidebar ──
 function hoverHighlight(id){
   if(activeStoryId) return; // don't hover-highlight if a story is clicked/active
   hoverStoryId = id;
@@ -589,22 +744,22 @@ function hoverClear(){
   });
 }
 
-// ââ PANEL TOGGLE ââ
+// ── PANEL TOGGLE ──
 function togglePanel(){
   var p = document.getElementById('panel');
   var t = document.getElementById('panel-toggle');
   p.classList.toggle('hidden');
   t.classList.toggle('shifted');
-  t.textContent = p.classList.contains('hidden') ? 'â°' : 'â';
+  t.textContent = p.classList.contains('hidden') ? '☰' : '✕';
   setTimeout(function(){map.invalidateSize()},350);
 }
 
-// ââ TOOLTIP STYLE ââ
+// ── TOOLTIP STYLE ──
 var ts = document.createElement('style');
 ts.textContent = '.conn-tooltip{background:rgba(26,21,32,0.94)!important;color:#c8aa78!important;border:1px solid rgba(200,170,120,0.2)!important;border-radius:8px!important;font-family:Inter,sans-serif!important;font-size:12px!important;padding:8px 12px!important;box-shadow:0 4px 20px rgba(0,0,0,0.3)!important;line-height:1.5!important}.conn-tooltip strong{color:#dfc99a}';
 document.head.appendChild(ts);
 
-// ââ INIT ââ
+// ── INIT ──
 showAll();
 </script>
 </body>
