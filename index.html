@@ -10,162 +10,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap');
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:#f5f0e8;color:#2a2520;height:100vh;width:100vw;overflow:hidden}
-#map{width:100%;height:100vh}
-
-/* ââ SIDEBAR ââ */
-#panel{
-  position:fixed;top:0;left:0;width:340px;height:100vh;
-  background:linear-gradient(180deg,#1a1520 0%,#15111c 100%);
-  border-right:1px solid rgba(200,170,120,0.12);
-  z-index:1000;display:flex;flex-direction:column;
-  transition:transform 0.3s ease;
-  box-shadow:4px 0 30px rgba(0,0,0,0.3);
-}
-#panel.hidden{transform:translateX(-340px)}
-
-#panel-toggle{
-  position:fixed;top:14px;left:14px;z-index:1001;
-  background:rgba(26,21,32,0.92);border:1px solid rgba(200,170,120,0.25);
-  color:#c8aa78;width:38px;height:38px;border-radius:8px;
-  cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;
-  backdrop-filter:blur(8px);transition:all 0.3s;
-}
-#panel-toggle.shifted{left:356px}
-#panel-toggle:hover{background:rgba(200,170,120,0.15)}
-
-/* Header / Branding */
-.panel-brand{
-  padding:28px 24px 20px;
-  border-bottom:1px solid rgba(200,170,120,0.1);
-  flex-shrink:0;
-}
-.brand-logo{
-  font-family:'Crimson Text',serif;font-size:26px;font-weight:700;
-  color:#c8aa78;letter-spacing:0.3px;margin-bottom:2px;
-}
-.brand-tagline{
-  font-size:11px;color:rgba(200,170,120,0.45);font-style:italic;
-  letter-spacing:0.3px;
-}
-
-/* Story List - scrollable */
-.story-section{
-  flex:1;overflow-y:auto;display:flex;flex-direction:column;
-  min-height:0;
-}
-.story-section-head{
-  padding:16px 24px 8px;
-  font-size:10px;font-weight:600;text-transform:uppercase;
-  letter-spacing:1.2px;color:rgba(200,170,120,0.35);
-  flex-shrink:0;
-}
-.slist{
-  padding:0 12px 12px;flex:1;overflow-y:auto;
-}
-.slist::-webkit-scrollbar{width:4px}
-.slist::-webkit-scrollbar-track{background:transparent}
-.slist::-webkit-scrollbar-thumb{background:rgba(200,170,120,0.15);border-radius:4px}
-
-.sitem{
-  display:flex;align-items:center;gap:11px;padding:10px 12px;
-  border-radius:8px;cursor:pointer;margin-bottom:2px;
-  transition:all 0.2s ease;border:1px solid transparent;
-  text-decoration:none;
-}
-.sitem .slink{
-  font-size:11px;color:rgba(200,170,120,0.25);flex-shrink:0;
-  transition:color 0.2s;text-decoration:none;
-}
-.sitem:hover .slink{color:rgba(200,170,120,0.7)}
-.sitem:hover{
-  background:rgba(200,170,120,0.08);
-  border-color:rgba(200,170,120,0.12);
-}
-.sitem.active{
-  background:rgba(200,170,120,0.12);
-  border-color:rgba(200,170,120,0.2);
-}
-.sitem.hovering{
-  background:rgba(200,170,120,0.06);
-  border-color:rgba(200,170,120,0.1);
-}
-.sdot{
-  width:12px;height:12px;border-radius:50%;flex-shrink:0;
-  transition:transform 0.2s,box-shadow 0.2s;
-}
-.sitem:hover .sdot,.sitem.hovering .sdot{
-  transform:scale(1.3);
-}
-.slabel{font-size:12.5px;font-weight:500;color:#b8a898;flex:1;transition:color 0.2s}
-.sitem:hover .slabel,.sitem.hovering .slabel{color:#c8aa78}
-.sitem.active .slabel{color:#dfc99a;font-weight:600}
-.scount{
-  font-size:10px;color:rgba(200,170,120,0.3);
-  background:rgba(200,170,120,0.06);padding:2px 8px;border-radius:10px;
-  flex-shrink:0;
-}
-
-.controls{
-  padding:8px 16px 12px;flex-shrink:0;
-  border-top:1px solid rgba(200,170,120,0.08);
-}
-.btn-all{
-  width:100%;padding:9px;background:rgba(200,170,120,0.06);
-  border:1px solid rgba(200,170,120,0.15);color:#c8aa78;
-  border-radius:8px;cursor:pointer;font-family:inherit;font-size:12px;font-weight:500;
-  transition:all 0.2s;
-}
-.btn-all:hover{background:rgba(200,170,120,0.12);border-color:rgba(200,170,120,0.25)}
-
-/* Bio / Footer */
-.panel-bio{
-  padding:20px 24px;
-  border-top:1px solid rgba(200,170,120,0.1);
-  flex-shrink:0;
-  background:rgba(0,0,0,0.15);
-}
-.bio-title{
-  font-family:'Crimson Text',serif;font-size:14px;font-weight:600;
-  color:#c8aa78;margin-bottom:6px;
-}
-.bio-text{
-  font-size:11.5px;line-height:1.6;color:rgba(200,170,120,0.5);
-  margin-bottom:12px;
-}
-.bio-link{
-  display:inline-flex;align-items:center;gap:6px;
-  font-size:11.5px;color:#c8aa78;text-decoration:none;
-  padding:6px 14px;border-radius:6px;
-  background:rgba(200,170,120,0.08);border:1px solid rgba(200,170,120,0.15);
-  transition:all 0.2s;
-}
-.bio-link:hover{background:rgba(200,170,120,0.15)}
-.bio-schedule{
-  font-size:10px;color:rgba(200,170,120,0.35);margin-top:10px;
-  font-style:italic;
-}
-
-/* ââ POPUPS ââ */
-.leaflet-popup-content-wrapper{
-  background:rgba(26,21,32,0.96)!important;color:#e8e0d4!important;
-  border-radius:12px!important;border:1px solid rgba(200,170,120,0.2)!important;
-  box-shadow:0 10px 40px rgba(0,0,0,0.4)!important;
-}
-.leaflet-popup-content{margin:16px 18px!important;font-family:'Inter',sans-serif!important;line-height:1.5!important}
-.leaflet-popup-tip{background:rgba(26,21,32,0.96)!important}
-.leaflet-popup-close-button{color:#c8aa78!important;font-size:20px!important}
-.ptitle{font-family:'Crimson Text',serif;font-size:18px;font-weight:700;color:#c8aa78;margin-bottom:4px}
-.ptrad{font-size:10px;color:rgba(200,170,120,0.5);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:10px}
-.pdesc{font-size:12.5px;color:#a89880;line-height:1.6;margin-bottom:12px}
-.pbadge{
-  display:inline-block;padding:3px 9px;margin:2px 3px 2px 0;
-  border-radius:10px;font-size:10px;background:rgba(200,170,120,0.07);
-  border:1px solid rgba(200,170,120,0.12);color:#a89880;
-}
-.plink{
-  display:inline-block;padding:8px 16px;margin-top:4px;
-  background:rgba(200,170,120,0.12);border:1px solid rgba(200,170,120,0.25);
-  border-radius:8px;color:#c8aa78;text-decoration:none;font-size:12px;font-weight:500;
+#map{width:100%;height:100vh}ont-size:12px;font-weight:500;
   transition:all 0.2s;
 }
 .plink:hover{background:rgba(200,170,120,0.22);color:#dfc99a}
@@ -351,14 +196,148 @@ var stories = [
       {lat:25.32,lng:83.01,label:"India â Nachiketa offered to Death, gains wisdom",tradition:"Hindu"},
       {lat:59.33,lng:18.07,label:"Scandinavia â Odin hangs himself on Yggdrasil for knowledge",tradition:"Norse"}
     ]
+  },
+  // ââ MESOPOTAMIAN / ANCIENT NEAR EASTERN ââ
+  {
+    id:11, title:"Creation of Enkidu", color:"#cd7f32",
+    slug:"creation-of-enkidu",
+    summary:"The wild man shaped from clay, drawn from the animals into civilization. Enkidu's creation echoes Adam, Eden, and the price of becoming human.",
+    markers:[
+      {lat:31.32,lng:45.64,label:"Uruk â Aruru shapes Enkidu from clay to oppose Gilgamesh",tradition:"Mesopotamian"},
+      {lat:31.0,lng:47.0,label:"Eden â Adam formed from dust, parallels clay-made human motif",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca â Quranic Adam created from clay, Iblis refuses to bow",tradition:"Qur'an"},
+      {lat:25.32,lng:83.01,label:"India â Purusha and Manu, primordial humanity shaped by the divine",tradition:"Hindu"},
+      {lat:59.33,lng:18.07,label:"Scandinavia â Ask and Embla fashioned from driftwood by the gods",tradition:"Norse"}
+    ]
+  },
+  {
+    id:12, title:"Gilgamesh and Enkidu Meet", color:"#8b6914",
+    slug:"gilgamesh-and-enkidu-meet",
+    summary:"The rival becomes the brother. Two men wrestle at the gates of Uruk, and violence transforms into the friendship that defines the epic.",
+    markers:[
+      {lat:31.32,lng:45.64,label:"Uruk â Gilgamesh and Enkidu wrestle at the city gate",tradition:"Mesopotamian"},
+      {lat:32.5,lng:46.0,label:"East of Eden â Cain and Abel, brotherhood that ends in murder",tradition:"Hebrew Bible"},
+      {lat:32.25,lng:35.57,label:"Jabbok â Jacob wrestles through the night, gains a new name",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Quranic sons of Adam â one brother refuses to retaliate",tradition:"Qur'an"},
+      {lat:29.97,lng:76.85,label:"Kurukshetra â Pandavas vs. Kauravas, kinship war at cosmic scale",tradition:"Hindu"}
+    ]
+  },
+  {
+    id:13, title:"Expedition Against Humbaba", color:"#a0522d",
+    slug:"expedition-against-humbaba",
+    summary:"Gilgamesh invades the sacred Cedar Forest and kills its divine guardian. When does courage become trespass against the gods?",
+    markers:[
+      {lat:34.25,lng:35.85,label:"Cedar Forest (Lebanon) â Humbaba guards the sacred trees",tradition:"Mesopotamian"},
+      {lat:31.32,lng:45.64,label:"Uruk â Gilgamesh departs seeking fame that outlasts death",tradition:"Mesopotamian"},
+      {lat:36.37,lng:34.36,label:"Valley of Elah â David faces Goliath, champion vs. giant",tradition:"Hebrew Bible"},
+      {lat:31.0,lng:47.0,label:"Eden â Sacred tree, divine limit, human taking, consequence",tradition:"Hebrew Bible"},
+      {lat:15.0,lng:-90.0,label:"Mesoamerica â Popol Vuh Hero Twins enter the dangerous realm",tradition:"Maya"}
+    ]
+  },
+  {
+    id:14, title:"The Bull of Heaven", color:"#b87333",
+    slug:"the-bull-of-heaven",
+    summary:"Ishtar sends the Bull of Heaven against Uruk. Gilgamesh and Enkidu slay it, but the insult to the divine turns triumph into sacrilege.",
+    markers:[
+      {lat:31.32,lng:45.64,label:"Uruk â Bull of Heaven devastates the city, heroes kill it",tradition:"Mesopotamian"},
+      {lat:31.78,lng:35.24,label:"Mt. Moriah â Ram sacrificed so Isaac lives; Bull dies, Enkidu follows",tradition:"Hebrew Bible"},
+      {lat:28.54,lng:33.98,label:"Mt. Sinai â Golden calf, sacred animal imagery mishandled",tradition:"Hebrew Bible"},
+      {lat:31.10,lng:35.40,label:"Dead Sea â Sodom, divine offense spreading to public catastrophe",tradition:"Hebrew Bible"},
+      {lat:25.32,lng:83.01,label:"India â Nandi the sacred bull, vehicle of Shiva",tradition:"Hindu"}
+    ]
+  },
+  {
+    id:15, title:"Death of Enkidu", color:"#8b4513",
+    slug:"death-of-enkidu",
+    summary:"The gods decree Enkidu's death after the heroes cross divine boundaries. Gilgamesh's grief transforms the epic from adventure into a meditation on mortality.",
+    markers:[
+      {lat:31.32,lng:45.64,label:"Uruk â Enkidu dies slowly after divine decree",tradition:"Mesopotamian"},
+      {lat:32.5,lng:46.0,label:"East of Eden â Abel's death teaches the world about blood guilt",tradition:"Hebrew Bible"},
+      {lat:31.0,lng:47.0,label:"Eden â Death follows boundary crossing in Genesis 3",tradition:"Hebrew Bible"},
+      {lat:31.77,lng:35.23,label:"Jerusalem â Job's suffering, bodily protest, unanswered grief",tradition:"Hebrew Bible"},
+      {lat:37.97,lng:23.73,label:"Greece â Achilles and Patroclus, grief that reshapes a hero",tradition:"Greek"}
+    ]
+  },
+  {
+    id:16, title:"Gilgamesh's Search for Immortality", color:"#996515",
+    slug:"gilgameshs-search-for-immortality",
+    summary:"After Enkidu dies, Gilgamesh crosses scorpion gates, darkness, and the Waters of Death seeking escape from mortality. He returns with wisdom instead of eternal life.",
+    markers:[
+      {lat:31.32,lng:45.64,label:"Uruk â Gilgamesh departs the city, grief-driven quest begins",tradition:"Mesopotamian"},
+      {lat:29.5,lng:48.0,label:"Persian Gulf coast â Waters of Death, cosmic geography",tradition:"Mesopotamian"},
+      {lat:31.0,lng:47.0,label:"Eden â Tree of Life, immortality near but barred",tradition:"Hebrew Bible"},
+      {lat:29.97,lng:76.85,label:"Kurukshetra â Bhagavad Gita reframes death through the imperishable self",tradition:"Hindu"},
+      {lat:24.67,lng:84.99,label:"Bodh Gaya â Buddhist traditions treat attachment as the deeper problem",tradition:"Buddhist"}
+    ]
+  },
+  {
+    id:17, title:"Utnapishtim and the Flood", color:"#bf8040",
+    slug:"utnapishtim-and-the-flood",
+    summary:"The flood survivor at the edge of the world tells Gilgamesh how the gods destroyed humanity and he alone was saved. The densest ancient parallel to Noah.",
+    markers:[
+      {lat:31.77,lng:45.51,label:"Shuruppak â Utnapishtim warned by Ea through a reed wall",tradition:"Mesopotamian"},
+      {lat:39.70,lng:44.30,label:"Mt. Ararat â Noah's ark, divine warning, animals, covenant",tradition:"Hebrew Bible"},
+      {lat:37.38,lng:43.35,label:"Mt. Judi â Nuh preaches, son refuses, faith defines the saved",tradition:"Qur'an"},
+      {lat:30.08,lng:79.02,label:"Himalayas â Manu warned by Matsya the fish avatar",tradition:"Hindu"},
+      {lat:38.53,lng:22.62,label:"Mt. Parnassus â Deucalion and Pyrrha survive Zeus's flood",tradition:"Greek"}
+    ]
+  },
+  {
+    id:18, title:"Atrahasis and the Flood", color:"#cc9933",
+    slug:"atrahasis-and-the-flood",
+    summary:"Humans created to carry the gods' labor multiply and become noisy. Plague, drought, famine, and flood follow. Mortality becomes part of the arrangement.",
+    markers:[
+      {lat:32.54,lng:44.42,label:"Babylon â Atrahasis Epic, creation-to-flood arc",tradition:"Mesopotamian"},
+      {lat:30.96,lng:46.10,label:"Southern Mesopotamia â Humans created from clay for divine labor",tradition:"Mesopotamian"},
+      {lat:31.0,lng:47.0,label:"Eden region â Genesis shares creation-to-flood arc, moral cause",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca â Quranic flood centers prophecy and unbelief",tradition:"Qur'an"},
+      {lat:30.75,lng:46.0,label:"Eridu â Ziusudra preserves the seed of mankind",tradition:"Mesopotamian"}
+    ]
+  },
+  {
+    id:19, title:"Ziusudra and the Eridu Genesis", color:"#b8963e",
+    slug:"ziusudra-and-the-eridu-genesis",
+    summary:"Kingship descends from heaven, cities are established, the gods send a flood. Ziusudra the king-priest carries animals, human seed, and sacred civic order through catastrophe.",
+    markers:[
+      {lat:30.75,lng:46.0,label:"Eridu â First city, kingship descends from heaven",tradition:"Mesopotamian"},
+      {lat:31.77,lng:45.51,label:"Shuruppak â Ziusudra hears the divine warning",tradition:"Mesopotamian"},
+      {lat:39.70,lng:44.30,label:"Mt. Ararat â Noah preserves life after divine warning",tradition:"Hebrew Bible"},
+      {lat:32.54,lng:44.42,label:"Babylon â Tower of Babel, heaven-to-earth order",tradition:"Hebrew Bible"},
+      {lat:31.78,lng:35.23,label:"Bethel â Jacob's Ladder, vertical connection of divine and human",tradition:"Hebrew Bible"}
+    ]
+  },
+  {
+    id:20, title:"The Plant of Life and the Serpent", color:"#9b7a2f",
+    slug:"the-plant-of-life-and-the-serpent",
+    summary:"Gilgamesh retrieves a plant that restores youth from the deep. While he bathes, a serpent steals it. The loss is quiet after a journey so vast.",
+    markers:[
+      {lat:31.32,lng:45.64,label:"Uruk â Gilgamesh returns empty-handed, the serpent sheds its skin",tradition:"Mesopotamian"},
+      {lat:31.0,lng:47.0,label:"Eden â Tree of Life, serpent, forbidden fruit, barred immortality",tradition:"Hebrew Bible"},
+      {lat:21.42,lng:39.86,label:"Mecca â Satan promises Adam immortality through the forbidden tree",tradition:"Qur'an"},
+      {lat:35.0,lng:105.0,label:"China â Peaches of immortality, the life-plant tradition",tradition:"Chinese"},
+      {lat:37.97,lng:23.73,label:"Greece â Garden of the Hesperides, golden apples of immortality",tradition:"Greek"}
+    ]
+  },
+  {
+    id:21, title:"Descent Toward the Netherworld", color:"#8a7030",
+    slug:"descent-toward-the-netherworld",
+    summary:"Enkidu descends to retrieve lost objects and is seized. Inanna passes seven gates and is stripped bare. The country of the dead has rules the living break.",
+    markers:[
+      {lat:31.32,lng:45.64,label:"Uruk â Enkidu descends, fails to obey rules of the lower realm",tradition:"Mesopotamian"},
+      {lat:32.54,lng:44.42,label:"Babylon â Inanna's descent, seven gates, stripped power",tradition:"Mesopotamian"},
+      {lat:32.0,lng:34.85,label:"Joppa â Jonah descends into the fish, Sheol-language, return by mercy",tradition:"Hebrew Bible"},
+      {lat:37.97,lng:23.73,label:"Greece â Orpheus enters the underworld for Eurydice, forbidden to look back",tradition:"Greek"},
+      {lat:34.47,lng:132.45,label:"Japan â Izanagi enters Yomi for Izanami, recoils at death",tradition:"Japanese"}
+    ]
   }
 ];
 
 // ââ TRADITION COLORS ââ
 var tradColors = {
   "Hebrew Bible":"#b8860b","Qur'an":"#1a8a7a","Greek":"#6c3483","Greek/Roman":"#6c3483",
-  "Hindu":"#c0392b","Mesopotamian":"#d4770b","Norse":"#2471a3",
-  "Egyptian":"#8e44ad","Zoroastrian":"#b7950b"
+  "Hindu":"#c0392b","Mesopotamian":"#cd7f32","Norse":"#2471a3",
+  "Egyptian":"#8e44ad","Zoroastrian":"#b7950b","Buddhist":"#e6a817",
+  "Chinese":"#c94c4c","Japanese":"#d4770b","Maya":"#2e8b57"
 };
 
 // ââ STATE ââ
@@ -368,7 +347,17 @@ var hoverStoryId = null;
 
 // ââ BUILD SIDEBAR ââ
 var slist = document.getElementById('slist');
-stories.forEach(function(s){
+
+function addSectionLabel(text){
+  var lbl = document.createElement('div');
+  lbl.style.cssText = 'padding:12px 12px 4px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:1.1px;color:rgba(200,170,120,0.4);';
+  lbl.textContent = text;
+  slist.appendChild(lbl);
+}
+
+stories.forEach(function(s, idx){
+  if(idx === 0) addSectionLabel('Hebrew Bible');
+  if(idx === 10) addSectionLabel('Mesopotamian / Ancient Near East');
   var div = document.createElement('div');
   div.className = 'sitem';
   div.setAttribute('data-id', s.id);
